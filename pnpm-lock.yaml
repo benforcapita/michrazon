@@ -53,12 +53,18 @@ importers:
       '@michrazon/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@michrazon/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@michrazon/mail':
         specifier: workspace:*
         version: link:../../packages/mail
       next:
         specifier: ^15.5.6
         version: 15.5.29(@types/node@24.19.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
       react:
         specifier: ^19.2.0
         version: 19.3.1
@@ -72,6 +78,9 @@ importers:
       '@types/node':
         specifier: ^24.10.0
         version: 24.19.2
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
       '@types/react':
         specifier: ^19.2.2
         version: 19.3.0

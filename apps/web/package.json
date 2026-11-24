@@ -13,14 +13,17 @@
   },
   "dependencies": {
     "@michrazon/core": "workspace:*",
+    "@michrazon/db": "workspace:*",
     "@michrazon/mail": "workspace:*",
     "next": "^15.5.6",
+    "pg": "^8.23.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "typescript": "^5.9.3"
