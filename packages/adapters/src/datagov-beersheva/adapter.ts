@@ -3,6 +3,7 @@ import type {
   NormalizedTender,
   SourceAdapter,
 } from '@michrazon/core';
+import type { AdapterRunCounts } from '../runCounts';
 import type { DatagovFieldMap } from './fieldMap';
 import { normalizeRecord } from './fieldMap';
 import { parseCsv, parseDatastoreResponse } from './parse';
@@ -25,10 +26,7 @@ export interface DatagovBeershevaOptions {
   openDataAllowlist?: readonly string[];
 }
 
-export interface AdapterRunCounts {
-  emitted: number;
-  skipped: number;
-}
+
 
 /**
  * datagov-beersheva (green). Reads the Beer Sheva tenders dataset once per
