@@ -3,11 +3,11 @@ import type {
   NormalizedTender,
   SourceAdapter,
 } from '@michrazon/core';
-import type { AdapterRunCounts } from '../runCounts';
-import type { MrGovParserConfig } from './parse';
-import { DEFAULT_PARSER, normalizeListingItem, parseListing } from './parse';
-import { checkRobots } from './robots';
-import { MrGovFacts } from './schema';
+import type { AdapterRunCounts } from '../runCounts.ts';
+import type { MrGovParserConfig } from './parse.ts';
+import { DEFAULT_PARSER, normalizeListingItem, parseListing } from './parse.ts';
+import { checkRobots } from './robots.ts';
+import { MrGovFacts } from './schema.ts';
 
 export interface MrGovListingOptions {
   /** Listing page URL for page N (1-based), newest first. */

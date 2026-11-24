@@ -1,6 +1,6 @@
 // Dedup helpers (LLD §7): natural key, cross-source secondary key, and
 // "what changed" comparisons for classification invalidation.
-import { canonicalJson, contentHash, normalizeWhitespace } from './canonical';
+import { canonicalJson, contentHash, normalizeWhitespace } from './canonical.ts';
 
 /** Fields that make up the content hash for a normalized tender. */
 export const TENDER_HASH_FIELDS = [

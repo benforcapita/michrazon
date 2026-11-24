@@ -1,7 +1,7 @@
 // Row types matching the LLD §3 schema (db/migrations/0001_init.sql).
 // Field names stay snake_case to mirror the tables exactly.
 
-import type { SourceId, SourceTier } from '../types';
+import type { SourceId, SourceTier } from '../types.ts';
 
 export type { SourceTier };
 

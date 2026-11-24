@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Michrazon worker entrypoint (Railway cron, every 30 min, Asia/Jerusalem).
-// `node dist/index.js --once` runs a single tick — used by Railway cron and
-// for the local dry-run smoke path.
+// Built with `pnpm build:worker` (tsc -> dist/); Railway runs
+// `node --conditions=dist dist/index.js --once`: one tick, exit 0 ok / 1 failed.
+// See cli.ts for flags.
 
 import { GuardedHttpImpl, loadConfig, type AppConfig, type SourceHttpLimits, type SourceId, type TokenSecrets } from '@michrazon/core';
 import { PostgresDb } from '@michrazon/db';
@@ -19,9 +20,9 @@ import {
 import { EmailAlertSink, RunRecorder } from '@michrazon/ops';
 import { ResendTransport, SuppressionAwareSender } from '@michrazon/mail';
 import { Pool } from 'pg';
-import { consoleLogger, type WorkerDeps } from './deps';
-import { ChatCompletionsProvider } from './llmProvider';
-import { runTick } from './tick';
+import { consoleLogger, type WorkerDeps } from './deps.ts';
+import { ChatCompletionsProvider } from './llmProvider.ts';
+import { runWorkerCli } from './cli.ts';
 
 const DEFAULT_SOURCE_LIMITS: Record<SourceId, SourceHttpLimits> = {
   datagov_beersheva: { minIntervalMs: 5_000, maxPerRun: 20 },
@@ -157,11 +158,5 @@ export function buildWorkerDeps(env: Record<string, string | undefined>): {
 
 const isMain = process.argv[1]?.endsWith('index.ts') || process.argv[1]?.endsWith('index.js');
 if (isMain) {
-  const { deps, alerts, close } = buildWorkerDeps(process.env);
-  try {
-    const ran = await runTick(deps, alerts, deps.now());
-    consoleLogger.info('tick complete', { ran });
-  } finally {
-    await close();
-  }
+  process.exitCode = await runWorkerCli(process.argv.slice(2), process.env, { build: buildWorkerDeps });
 }

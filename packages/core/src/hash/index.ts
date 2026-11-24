@@ -1,2 +1,2 @@
-export * from './canonical';
-export * from './dedup';
+export * from './canonical.ts';
+export * from './dedup.ts';

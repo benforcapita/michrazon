@@ -8,9 +8,9 @@ import {
   assertAllowed,
   assertResponseHeaders,
   SourceBlockedError,
-} from '../guard/index';
-import { PerHostRateLimiter } from '../rateLimiter/index';
-import type { GuardedHttp, GuardedResponse, SourceId } from '../types';
+} from '../guard/index.ts';
+import { PerHostRateLimiter } from '../rateLimiter/index.ts';
+import type { GuardedHttp, GuardedResponse, SourceId } from '../types.ts';
 
 export interface RawResponse {
   readonly status: number;

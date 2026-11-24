@@ -1,2 +1,2 @@
-export * from './errors';
-export * from './sourceGuard';
+export * from './errors.ts';
+export * from './sourceGuard.ts';

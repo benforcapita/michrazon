@@ -1,7 +1,7 @@
 import { checkDailyBudget, PROMPT_VERSION, type ClassificationInput } from '@michrazon/llm';
 import { jerusalemDate } from '@michrazon/core';
 import type { RunResult } from '@michrazon/ops';
-import type { WorkerDeps } from '../deps';
+import type { WorkerDeps } from '../deps.ts';
 
 const TIER_BY_SOURCE = { datagov_beersheva: 'green', mrgov_listing: 'yellow' } as const;
 const BATCH = 50;
