@@ -40,6 +40,44 @@ while `legal_gate_cleared_at` is null fails in DB trigger AND in
 `loadConfig`/`assertBillingGate`. After review: set
 `legal_gate_cleared_at`, then `billing_enabled`.
 
+## Classifier (PRO-812)
+
+The pilot worker classifies with **TypeSafe Jev** (`LLM_PROVIDER=jev`) via the
+System One HTTP API — no extra runtime or build step; it is plain `fetch` from
+the Node worker. If Jev errors, the key is unset, or the API is down, each
+tender falls back to a **keyword-only** classifier; the classify run is then
+recorded `partial` with the reason on `pipeline_runs` (warn alert to
+`OPS_ALERT_TO`). It never fails the tick.
+
+Worker env (Railway → michrazon → worker → Variables; Ben fills values):
+
+- `LLM_PROVIDER=jev`
+- `TYPESAFE_API_KEY=` — secret, empty key created for Ben to paste
+- `TYPESAFE_MODEL=` — optional; unset uses the service default model
+- `JEV_MIN_CONFIDENCE=0.55` — digest confidence gate for the jev path
+- `JEV_TIMEOUT_MS=15000` — bound on each TypeSafe call; a hang aborts and
+  falls back to the keyword classifier (`partial` run, never blocks the tick)
+- `SUMMARIES_ENABLED=false` — pilot digests render title, publisher,
+  deadline and listing link only; stored `summary_he` is never sent
+- `LLM_API_KEY` is **not required** for the jev path (leave unset)
+
+To create the empty placeholder keys on Railway (writes the non-secret
+values, leaves `TYPESAFE_*` empty for Ben):
+
+```sh
+RAILWAY_TOKEN=<token> node scripts/railway/create-worker-env-stubs.ts
+# preview only:
+node scripts/railway/create-worker-env-stubs.ts --dry-run
+```
+
+Variable changes may trigger a redeploy of the worker service — run it when
+a restart of the cron tick is acceptable. If a project-scoped token can't
+resolve names, pass `RAILWAY_PROJECT_ID` / `RAILWAY_ENVIRONMENT_ID` /
+`RAILWAY_SERVICE_ID` explicitly.
+
+Set `LLM_PROVIDER=chat_completions` + `LLM_API_KEY` + `LLM_MODEL` to use the
+OpenAI-compatible path instead (kept in-tree, not the pilot path).
+
 ## Monitoring
 
 - `GET /api/health?token=$INTERNAL_HEALTH_TOKEN` → `{db:true}` (404 without it).

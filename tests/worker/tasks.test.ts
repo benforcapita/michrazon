@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { LlmProvider, NormalizedTender, OutboundEmail, SourceAdapter } from '@michrazon/core';
+import {
+  ChatCompletionsClassifier,
+  JevClassifier,
+  KeywordClassifier,
+  KeywordFallbackClassifier,
+} from '@michrazon/llm';
 import { MemoryAlertSink, RunRecorder } from '@michrazon/ops';
 import { SuppressionAwareSender } from '@michrazon/mail';
 import type { WorkerDeps } from '../../apps/worker/src/deps';
@@ -52,7 +58,7 @@ function workerDeps(overrides?: Partial<WorkerDeps>) {
     db: fake.db,
     http: { get: async () => { throw new Error('no network in tests'); } },
     adapters: {},
-    llm: GOOD_LLM,
+    classifier: new ChatCompletionsClassifier(GOOD_LLM, { summariesEnabled: true }),
     sender,
     recorder: new RunRecorder({ db: fake.db, alerts, log: silentLogger, now: () => NOW }),
     secrets: { k1: 'secret' },
@@ -62,6 +68,7 @@ function workerDeps(overrides?: Partial<WorkerDeps>) {
     attributionBySource: async () => 'attribution',
     llmDailyBudgetTokens: 1000,
     relevanceThreshold: 0.8,
+    summariesEnabled: true,
     log: silentLogger,
     now: () => NOW,
     ...overrides,
@@ -129,6 +136,77 @@ describe('digest build + send', () => {
     const resend = await runDigestSend(deps);
     expect(resend).toBeNull(); // run recorded already today
     expect(sent).toHaveLength(1);
+  });
+});
+
+const JEV_OK = {
+  model: 'jev-test',
+  answers: {
+    relevance: { type: 'choice', choice: 'relevant', confidence: 0.9 },
+    category: { type: 'choice', choice: 'software_dev', confidence: 0.9 },
+  },
+  usage: { input_tokens: 10, output_tokens: 5 },
+};
+
+describe('jev classify path (PRO-812)', () => {
+  it('classifies a Beersheva tender through the Jev provider', async () => {
+    const jev = new JevClassifier({ systemOne: async () => JEV_OK });
+    const { deps, fake } = workerDeps({
+      classifier: jev,
+      relevanceThreshold: 0.55,
+      summariesEnabled: false,
+    });
+    await runIngest(deps, adapterWith([TENDER]));
+    const res = await runClassify(deps);
+    expect(res?.status).toBe('ok');
+    const cls = fake.classifications[0]!;
+    expect(cls.model_id).toBe('jev-test');
+    expect(cls.is_relevant).toBe(true);
+    expect(cls.summary_he).toBeNull();
+    // 0.9 confidence clears the 0.55 jev gate → digest eligible
+    const eligible = await fake.db.listDigestEligible([...fake.tenders.values()].map((t) => t.id), 0.55);
+    expect(eligible).toHaveLength(1);
+  });
+
+  it('falls back to keyword scoring and records the reason on the run', async () => {
+    const cls = new KeywordFallbackClassifier(
+      new JevClassifier({
+        systemOne: async () => {
+          throw new Error('typesafe api error (503): overloaded');
+        },
+      }),
+      new KeywordClassifier(),
+      silentLogger,
+    );
+    const { deps, fake } = workerDeps({ classifier: cls });
+    await runIngest(deps, adapterWith([{ ...TENDER, title: 'פיתוח מערכת מידע' }]));
+    const res = await runClassify(deps);
+    expect(res?.status).toBe('partial');
+    expect(res?.counts['keyword_fallback']).toBe(1);
+    expect(res?.error).toContain('503');
+    expect(fake.classifications[0]?.model_id).toBe('keyword_fallback');
+    expect(fake.classifications[0]?.is_relevant).toBe(true);
+  });
+});
+
+describe('digest without summaries (PRO-812 §6)', () => {
+  it('renders title, publisher, deadline and link — no summary_he text', async () => {
+    const { deps, fake, sent } = workerDeps({ summariesEnabled: false });
+    await runIngest(deps, adapterWith([{ ...TENDER, publisher: 'עיריית באר שבע' }]));
+    await runClassify(deps); // classification row still stores summary_he
+    expect(fake.classifications[0]?.summary_he).toBeTruthy();
+    const sub = await fake.db.createPendingSubscriber({ email: 'nosum@u.com' });
+    await fake.db.confirmSubscriber(sub.id);
+    await runDigestBuild(deps);
+    await runDigestSend(deps);
+    expect(sent).toHaveLength(1);
+    const mail = sent[0]!;
+    expect(mail.html).toContain('פיתוח מערכת');
+    expect(mail.html).toContain('עיריית באר שבע');
+    expect(mail.html).toContain('למקור הרשמי');
+    expect(mail.html).not.toContain('מכרז רלוונטי');
+    expect(mail.text).not.toContain('מכרז רלוונטי');
+    expect(mail.text).not.toContain('סיכום:');
   });
 });
 

@@ -1,12 +1,12 @@
 import type {
   Db,
   GuardedHttp,
-  LlmProvider,
   Logger,
   SourceAdapter,
   SourceId,
   TokenSecrets,
 } from '@michrazon/core';
+import type { TenderClassifier } from '@michrazon/llm';
 import type { RunRecorder } from '@michrazon/ops';
 import type { SuppressionAwareSender } from '@michrazon/mail';
 
@@ -16,7 +16,7 @@ export interface WorkerDeps {
   db: Db;
   http: GuardedHttp;
   adapters: Partial<Record<SourceId, SourceAdapter>>;
-  llm: LlmProvider;
+  classifier: TenderClassifier;
   sender: SuppressionAwareSender;
   recorder: RunRecorder;
   secrets: TokenSecrets;
@@ -27,6 +27,8 @@ export interface WorkerDeps {
   attributionBySource: (sourceId: SourceId) => Promise<string>;
   llmDailyBudgetTokens: number;
   relevanceThreshold: number;
+  /** Pilot digests render without LLM summaries (PRO-812). */
+  summariesEnabled: boolean;
   log: Logger;
   now(): Date;
 }

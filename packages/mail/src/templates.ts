@@ -87,8 +87,7 @@ export function renderDigestText(v: DigestView): string {
       (it, i) => `${i + 1}) ${it.title}
    מפרסם: ${it.publisher ?? '—'} | מספר מכרז: ${it.tender_id}
    פורסם: ${it.published ?? '—'} | מועד אחרון להגשה: ${it.deadline ?? '—'}
-   סיכום: ${it.summary_he ?? '—'}
-   מקור רשמי: ${it.official_url}`,
+${it.summary_he ? `   סיכום: ${it.summary_he}\n` : ''}   מקור רשמי: ${it.official_url}`,
     )
     .join('\n\n');
   return `מכרזון — מכרזים חדשים, ${v.date_he}

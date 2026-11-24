@@ -17,6 +17,11 @@ export const ENV_NAMES = [
   'LLM_MODEL',
   'LLM_API_KEY',
   'LLM_DAILY_BUDGET', // hard daily token/spend cap
+  'TYPESAFE_API_KEY', // jev provider key (secret; worker only)
+  'TYPESAFE_MODEL', // optional jev model override; unset = service default
+  'JEV_MIN_CONFIDENCE', // digest gate for the jev path (default 0.55)
+  'JEV_TIMEOUT_MS', // bound on each TypeSafe call (default 15000)
+  'SUMMARIES_ENABLED', // 'true'|'false'; pilot digests have no LLM summaries
   'PROMPT_VERSION',
   'SENDING_DOMAIN',
   'REPLY_TO',
@@ -50,6 +55,11 @@ export interface AppConfig {
   llmModel?: string;
   llmApiKey?: string;
   llmDailyBudget?: number;
+  typesafeApiKey?: string;
+  typesafeModel?: string;
+  jevMinConfidence: number;
+  jevTimeoutMs: number;
+  summariesEnabled: boolean;
   promptVersion: string;
   sendingDomain?: string;
   replyTo?: string;
@@ -64,6 +74,11 @@ export interface AppConfig {
 }
 
 export class ConfigError extends Error {}
+
+/** Digest confidence gate for the jev classifier path (PRO-812). */
+export const DEFAULT_JEV_MIN_CONFIDENCE = 0.55;
+/** Bound on each TypeSafe API call (PRO-818). */
+export const DEFAULT_JEV_TIMEOUT_MS = 15_000;
 
 function opt(env: Record<string, string | undefined>, name: EnvName): string | undefined {
   const v = env[name];
@@ -82,6 +97,9 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     mode: rawMode,
     billingEnabled,
     legalGateClearedAt,
+    jevMinConfidence: DEFAULT_JEV_MIN_CONFIDENCE,
+    jevTimeoutMs: DEFAULT_JEV_TIMEOUT_MS,
+    summariesEnabled: env['SUMMARIES_ENABLED'] === 'true',
     promptVersion: env['PROMPT_VERSION'] ?? 'v1',
   };
   const optStr = (name: EnvName, key: keyof AppConfig) => {
@@ -99,6 +117,8 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   optStr('LLM_PROVIDER', 'llmProvider');
   optStr('LLM_MODEL', 'llmModel');
   optStr('LLM_API_KEY', 'llmApiKey');
+  optStr('TYPESAFE_API_KEY', 'typesafeApiKey');
+  optStr('TYPESAFE_MODEL', 'typesafeModel');
   optStr('SENDING_DOMAIN', 'sendingDomain');
   optStr('REPLY_TO', 'replyTo');
   optStr('OPS_ALERT_TO', 'opsAlertTo');
@@ -114,6 +134,20 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     const n = Number(budget);
     if (!Number.isFinite(n) || n <= 0) throw new ConfigError('LLM_DAILY_BUDGET must be positive');
     cfg.llmDailyBudget = n;
+  }
+  const jevMin = opt(env, 'JEV_MIN_CONFIDENCE');
+  if (jevMin !== undefined) {
+    const n = Number(jevMin);
+    if (!Number.isFinite(n) || n < 0 || n > 1) {
+      throw new ConfigError('JEV_MIN_CONFIDENCE must be a number in [0,1]');
+    }
+    cfg.jevMinConfidence = n;
+  }
+  const jevTimeout = opt(env, 'JEV_TIMEOUT_MS');
+  if (jevTimeout !== undefined) {
+    const n = Number(jevTimeout);
+    if (!Number.isFinite(n) || n <= 0) throw new ConfigError('JEV_TIMEOUT_MS must be positive');
+    cfg.jevTimeoutMs = n;
   }
 
   assertBillingGate(cfg);

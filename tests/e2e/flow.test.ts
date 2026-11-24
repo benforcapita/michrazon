@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { LlmProvider, NormalizedTender, OutboundEmail, SourceAdapter } from '@michrazon/core';
 import { MemoryAlertSink, RunRecorder } from '@michrazon/ops';
+import { ChatCompletionsClassifier } from '@michrazon/llm';
 import { SuppressionAwareSender } from '@michrazon/mail';
 import { startTestDb, type TestDb } from '@michrazon/db/testing';
 import type { PostgresDb } from '@michrazon/db';
@@ -49,7 +50,7 @@ function workerDeps(now: Date): WorkerDeps {
     db,
     http: { get: async () => { throw new Error('no network'); } },
     adapters: {},
-    llm: LLM,
+    classifier: new ChatCompletionsClassifier(LLM, { summariesEnabled: true }),
     sender: new SuppressionAwareSender({
       transport: { send: async (e) => { sentMail.push(e); return { messageId: `m-${sentMail.length}` }; } },
       isSuppressed: async (e) => (await db.getSuppression(e.toLowerCase())) !== null,
@@ -62,6 +63,7 @@ function workerDeps(now: Date): WorkerDeps {
     attributionBySource: async (sid) => (await db.getSource(sid))?.attribution_text ?? '',
     llmDailyBudgetTokens: 1_000_000,
     relevanceThreshold: 0.8,
+    summariesEnabled: true,
     log: silentLogger,
     now: () => now,
   };
