@@ -20,3 +20,26 @@ Hebrew daily email alerts for new Israeli public tenders relevant to **software,
 
 ## License
 MIT
+
+## Monorepo layout
+
+pnpm + TypeScript workspace. Packages and apps:
+
+- `packages/core` — types, config, `Db` port, source guard, http, rate limiter, hash, tokens, clock
+- `packages/adapters` — `datagov-beersheva`, `mrgov-listing`, disabled stubs
+- `packages/llm` — classifier/summarizer behind a provider port
+- `packages/mail` — RTL templates + suppression-aware Resend sender (tracking OFF)
+- `packages/ops` — pipeline run recorder + ops alerts
+- `packages/db` — Postgres implementation of the `Db` port
+- `apps/web` — Vercel Next.js public flows + webhooks + health
+- `apps/worker` — Railway worker (ingest / classify / digest / housekeeping)
+- `db/migrations` — Postgres/Supabase schema
+- `tests` — unit, contract, db, e2e, compliance
+
+## Scripts
+
+- `pnpm lint` — eslint (adapters may not call global `fetch`; `ctx.http` only)
+- `pnpm typecheck` — `tsc --noEmit` across workspace
+- `pnpm test` — vitest
+- `pnpm ci:secret-scan` — tracked-file secret scan
+- `pnpm ci:guard` — red-domain (AC-01/T-GUARD-1) and 2021-dataset (AC-06) greps
