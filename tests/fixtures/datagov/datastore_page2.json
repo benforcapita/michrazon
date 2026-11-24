@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "result": {
+    "total": 3,
+    "records": [
+      {
+        "_id": 3,
+        "מספר מכרז": "",
+        "שם המכרז": "מכרז ללא מספר",
+        "קישור": "https://data.gov.il/dataset/tenders-beersheva/r/x"
+      }
+    ]
+  }
+}

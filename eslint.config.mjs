@@ -15,6 +15,14 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
     // Adapters may talk to the network ONLY through the injected GuardedHttp
     // (ctx.http). Raw global fetch is forbidden here (LLD §4 rule 1).
     files: ['packages/adapters/**/*.ts'],

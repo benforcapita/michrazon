@@ -104,3 +104,32 @@ export function isInWindow(task: TaskWindow, now: Date): boolean {
 export function shouldRunTask(task: TaskWindow, now: Date): boolean {
   return isInWindow(task, now);
 }
+
+/** Offset (ms) of Asia/Jerusalem wall clock ahead of UTC at instant `at`. */
+export function jerusalemOffsetMs(at: Date): number {
+  const p = jerusalemParts(at);
+  const wallAsUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute);
+  const utcMinute = Math.floor(at.getTime() / 60000) * 60000;
+  return wallAsUtc - utcMinute;
+}
+
+/**
+ * Convert an Asia/Jerusalem wall-clock time to the UTC instant it denotes.
+ * Iterates because the offset itself depends on the result (DST-safe).
+ */
+export function jerusalemWallToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+): Date {
+  const wall = Date.UTC(year, month - 1, day, hour, minute);
+  let guess = wall;
+  for (let i = 0; i < 3; i += 1) {
+    const corrected = wall - jerusalemOffsetMs(new Date(guess));
+    if (corrected === guess) break;
+    guess = corrected;
+  }
+  return new Date(guess);
+}
