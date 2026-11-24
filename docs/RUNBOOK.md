@@ -63,9 +63,9 @@ To create the empty placeholder keys on Railway (writes the non-secret
 values, leaves `TYPESAFE_*` empty for Ben):
 
 ```sh
-RAILWAY_TOKEN=<token> node scripts/railway/create-worker-env-stubs.mjs
+RAILWAY_TOKEN=<token> node scripts/railway/create-worker-env-stubs.ts
 # preview only:
-node scripts/railway/create-worker-env-stubs.mjs --dry-run
+node scripts/railway/create-worker-env-stubs.ts --dry-run
 ```
 
 Variable changes may trigger a redeploy of the worker service — run it when

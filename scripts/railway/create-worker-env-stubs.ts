@@ -7,8 +7,8 @@
 // script — it only ever writes the values listed in VARS below.
 //
 // Usage:
-//   RAILWAY_TOKEN=<token> node scripts/railway/create-worker-env-stubs.mjs
-//   node scripts/railway/create-worker-env-stubs.mjs --dry-run   # print plan only
+//   RAILWAY_TOKEN=<token> node scripts/railway/create-worker-env-stubs.ts
+//   node scripts/railway/create-worker-env-stubs.ts --dry-run   # print plan only
 //
 // Token: Railway account/team token with access to the project (Railway ->
 // Account Settings -> Tokens). If the token is a project-scoped token the
