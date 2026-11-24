@@ -87,8 +87,15 @@ export function makeFakeDb(opts?: { now?: () => Date }) {
       const s = subscribers.find((x) => x.id === sid);
       if (s) {
         s.status = 'active';
-        s.confirmed_at = nowIso();
+        s.confirmed_at = s.confirmed_at ?? nowIso();
       }
+    },
+    async reopenForResubscribe(sid) {
+      const s = subscribers.find((x) => x.id === sid);
+      if (!s || s.status !== 'unsubscribed') return null;
+      s.status = 'pending';
+      s.ended_at = null;
+      return s;
     },
     async updateSubscriberKeywords(sid, keywords) {
       const s = subscribers.find((x) => x.id === sid);
@@ -120,7 +127,7 @@ export function makeFakeDb(opts?: { now?: () => Date }) {
       let n = 0;
       for (let i = subscribers.length - 1; i >= 0; i -= 1) {
         const s = subscribers[i]!;
-        if (s.status === 'pending' && new Date(s.created_at) < cutoff) {
+        if (s.status === 'pending' && s.confirmed_at === null && new Date(s.created_at) < cutoff) {
           subscribers.splice(i, 1);
           n += 1;
         }
