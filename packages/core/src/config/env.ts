@@ -20,6 +20,7 @@ export const ENV_NAMES = [
   'TYPESAFE_API_KEY', // jev provider key (secret; worker only)
   'TYPESAFE_MODEL', // optional jev model override; unset = service default
   'JEV_MIN_CONFIDENCE', // digest gate for the jev path (default 0.55)
+  'JEV_TIMEOUT_MS', // bound on each TypeSafe call (default 15000)
   'SUMMARIES_ENABLED', // 'true'|'false'; pilot digests have no LLM summaries
   'PROMPT_VERSION',
   'SENDING_DOMAIN',
@@ -57,6 +58,7 @@ export interface AppConfig {
   typesafeApiKey?: string;
   typesafeModel?: string;
   jevMinConfidence: number;
+  jevTimeoutMs: number;
   summariesEnabled: boolean;
   promptVersion: string;
   sendingDomain?: string;
@@ -75,6 +77,8 @@ export class ConfigError extends Error {}
 
 /** Digest confidence gate for the jev classifier path (PRO-812). */
 export const DEFAULT_JEV_MIN_CONFIDENCE = 0.55;
+/** Bound on each TypeSafe API call (PRO-818). */
+export const DEFAULT_JEV_TIMEOUT_MS = 15_000;
 
 function opt(env: Record<string, string | undefined>, name: EnvName): string | undefined {
   const v = env[name];
@@ -94,6 +98,7 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     billingEnabled,
     legalGateClearedAt,
     jevMinConfidence: DEFAULT_JEV_MIN_CONFIDENCE,
+    jevTimeoutMs: DEFAULT_JEV_TIMEOUT_MS,
     summariesEnabled: env['SUMMARIES_ENABLED'] === 'true',
     promptVersion: env['PROMPT_VERSION'] ?? 'v1',
   };
@@ -137,6 +142,12 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
       throw new ConfigError('JEV_MIN_CONFIDENCE must be a number in [0,1]');
     }
     cfg.jevMinConfidence = n;
+  }
+  const jevTimeout = opt(env, 'JEV_TIMEOUT_MS');
+  if (jevTimeout !== undefined) {
+    const n = Number(jevTimeout);
+    if (!Number.isFinite(n) || n <= 0) throw new ConfigError('JEV_TIMEOUT_MS must be positive');
+    cfg.jevTimeoutMs = n;
   }
 
   assertBillingGate(cfg);

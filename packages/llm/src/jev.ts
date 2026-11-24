@@ -11,6 +11,8 @@ import type { TenderClassifier } from './tenderClassifier';
 // tests never touch the network.
 
 export const DEFAULT_JEV_MIN_CONFIDENCE = 0.55;
+/** JEV_TIMEOUT_MS default (PRO-818): a hung TypeSafe call must not block the tick. */
+export const DEFAULT_JEV_TIMEOUT_MS = 15_000;
 export const TYPESAFE_DEFAULT_BASE_URL = 'https://api.typesafe.ai';
 
 export interface JevSystemOneRequest {
@@ -24,7 +26,7 @@ export type JevSystemOne = (req: JevSystemOneRequest) => Promise<unknown>;
 
 export type JevFetch = (
   url: string,
-  init: { method: string; headers: Record<string, string>; body: string },
+  init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal },
 ) => Promise<{ status: number; json(): Promise<unknown> }>;
 
 export interface JevHttpClientOptions {
@@ -32,22 +34,37 @@ export interface JevHttpClientOptions {
   model?: string;
   baseUrl?: string;
   fetchImpl: JevFetch;
+  timeoutMs?: number;
 }
 
 /** Real client. Missing TYPESAFE_API_KEY throws on call — the caller's
- *  fallback handles it; the worker must not fail at construction. */
+ *  fallback handles it; the worker must not fail at construction. The call
+ *  is bounded by timeoutMs two ways: the AbortSignal is forwarded to fetch,
+ *  and an explicit race rejects even if a fetch impl ignores the signal. */
 export function createJevSystemOneClient(opts: JevHttpClientOptions): JevSystemOne {
   const baseUrl = opts.baseUrl ?? TYPESAFE_DEFAULT_BASE_URL;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_JEV_TIMEOUT_MS;
   return async (req) => {
     if (!opts.apiKey) throw new Error('TYPESAFE_API_KEY is not set');
-    const res = await opts.fetchImpl(`${baseUrl}/v1/systemone`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${opts.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ...req, model: req.model ?? opts.model }),
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timedOut = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`typesafe request timed out after ${timeoutMs}ms`)),
+        timeoutMs,
+      );
     });
+    const res = await Promise.race([
+      opts.fetchImpl(`${baseUrl}/v1/systemone`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${opts.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...req, model: req.model ?? opts.model }),
+        signal: AbortSignal.timeout(timeoutMs),
+      }),
+      timedOut,
+    ]).finally(() => clearTimeout(timer));
     const body = (await res.json()) as { error?: { message?: string } | string };
     if (res.status >= 400) {
       const msg = typeof body.error === 'string' ? body.error : (body.error?.message ?? 'unknown');

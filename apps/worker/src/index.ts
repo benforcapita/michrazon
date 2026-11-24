@@ -41,6 +41,7 @@ function buildClassifier(cfg: AppConfig, fetchJson: JevFetch): TenderClassifier 
           apiKey: cfg.typesafeApiKey,
           model: cfg.typesafeModel,
           fetchImpl: fetchJson,
+          timeoutMs: cfg.jevTimeoutMs,
         }),
         minConfidence: cfg.jevMinConfidence,
         model: cfg.typesafeModel,
@@ -73,8 +74,16 @@ export function buildWorkerDeps(env: Record<string, string | undefined>): {
   const db = new PostgresDb(pool);
   const secrets: TokenSecrets = { [cfg.tokenHmacKid ?? 'k1']: cfg.tokenHmacSecret };
 
-  const fetchJson = async (url: string, init: { method: string; headers: Record<string, string>; body?: string }) => {
-    const res = await globalThis.fetch(url, { method: init.method, headers: init.headers, body: init.body });
+  const fetchJson = async (
+    url: string,
+    init: { method: string; headers: Record<string, string>; body?: string; signal?: AbortSignal },
+  ) => {
+    const res = await globalThis.fetch(url, {
+      method: init.method,
+      headers: init.headers,
+      body: init.body,
+      signal: init.signal,
+    });
     return { status: res.status, json: () => res.json() as Promise<unknown> };
   };
 

@@ -27,6 +27,7 @@ const VARS = [
   ['TYPESAFE_API_KEY', ''], // secret — Ben pastes the value
   ['TYPESAFE_MODEL', ''], // optional; unset = service default model
   ['JEV_MIN_CONFIDENCE', '0.55'],
+  ['JEV_TIMEOUT_MS', '15000'],
   ['SUMMARIES_ENABLED', 'false'],
 ];
 

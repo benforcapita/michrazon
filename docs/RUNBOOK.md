@@ -55,6 +55,8 @@ Worker env (Railway → michrazon → worker → Variables; Ben fills values):
 - `TYPESAFE_API_KEY=` — secret, empty key created for Ben to paste
 - `TYPESAFE_MODEL=` — optional; unset uses the service default model
 - `JEV_MIN_CONFIDENCE=0.55` — digest confidence gate for the jev path
+- `JEV_TIMEOUT_MS=15000` — bound on each TypeSafe call; a hang aborts and
+  falls back to the keyword classifier (`partial` run, never blocks the tick)
 - `SUMMARIES_ENABLED=false` — pilot digests render title, publisher,
   deadline and listing link only; stored `summary_he` is never sent
 - `LLM_API_KEY` is **not required** for the jev path (leave unset)

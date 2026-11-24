@@ -6,6 +6,7 @@ import {
   JevClassifier,
   KeywordClassifier,
   KeywordFallbackClassifier,
+  type JevFetch,
   type JevSystemOneRequest,
 } from '@michrazon/llm';
 import type { ClassificationInput } from '@michrazon/llm';
@@ -166,6 +167,68 @@ describe('createJevSystemOneClient', () => {
       }),
     });
     await expect(client({ state: {}, questions: {} })).rejects.toThrow('401');
+  });
+});
+
+describe('client timeout (PRO-818)', () => {
+  const hang = () => new Promise<never>(() => {}); // never resolves
+
+  it('rejects a hung call after timeoutMs even when fetch ignores the signal', async () => {
+    const client = createJevSystemOneClient({
+      apiKey: 'k',
+      timeoutMs: 10,
+      fetchImpl: hang,
+    });
+    await expect(client({ state: {}, questions: {} })).rejects.toThrow('timed out');
+  });
+
+  it('passes an AbortSignal to fetch', async () => {
+    let signal: AbortSignal | undefined;
+    const client = createJevSystemOneClient({
+      apiKey: 'k',
+      timeoutMs: 10_000,
+      fetchImpl: async (_url, init) => {
+        signal = init.signal;
+        return { status: 200, json: async () => ({ answers: {} }) };
+      },
+    });
+    await client({ state: {}, questions: {} });
+    expect(signal).toBeInstanceOf(AbortSignal);
+    expect(signal?.aborted).toBe(false);
+  });
+
+  it('timeout falls back to the keyword classifier with the reason recorded', async () => {
+    const cls = new KeywordFallbackClassifier(
+      new JevClassifier({
+        systemOne: createJevSystemOneClient({ apiKey: 'k', timeoutMs: 5, fetchImpl: hang }),
+      }),
+      new KeywordClassifier(),
+      silentLogger,
+    );
+    const out = await cls.classify({ source_tier: 'green', title: 'פיתוח תוכנה' });
+    expect(out.status).toBe('ok');
+    expect(out.modelId).toBe('keyword_fallback');
+    expect(out.fallbackReason).toContain('timed out');
+    expect(out.result?.is_relevant).toBe(true);
+  });
+
+  it('an aborted call (not just a slow one) also falls back', async () => {
+    const aborted: JevFetch = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () =>
+          reject(new DOMException('The operation was aborted.', 'AbortError')),
+        );
+      });
+    const cls = new KeywordFallbackClassifier(
+      new JevClassifier({
+        systemOne: createJevSystemOneClient({ apiKey: 'k', timeoutMs: 5, fetchImpl: aborted }),
+      }),
+      new KeywordClassifier(),
+      silentLogger,
+    );
+    const out = await cls.classify({ source_tier: 'green', title: 'רכש ציוד משרדי' });
+    expect(out.fallbackReason).toBeTruthy();
+    expect(out.modelId).toBe('keyword_fallback');
   });
 });
 
