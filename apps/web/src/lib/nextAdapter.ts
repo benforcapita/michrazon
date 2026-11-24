@@ -47,8 +47,8 @@ export function toResponse(result: HandlerResult): NextResponse {
 
 export function route(
   handler: (req: HandlerRequest, deps: WebDeps) => Promise<HandlerResult>,
-  deps: WebDeps,
+  getDeps: () => WebDeps,
 ) {
   return async (req: NextRequest): Promise<NextResponse> =>
-    toResponse(await handler(await toHandlerRequest(req), deps));
+    toResponse(await handler(await toHandlerRequest(req), getDeps()));
 }

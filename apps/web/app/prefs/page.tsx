@@ -1,5 +1,6 @@
 import { prefsPage } from '../../src/lib/handlers';
 
-export default function Prefs({ searchParams }: { searchParams: { t?: string } }) {
-  return <div dangerouslySetInnerHTML={{ __html: prefsPage(searchParams.t ?? '', []) }} />;
+export default async function Prefs({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
+  const { t } = await searchParams;
+  return <div dangerouslySetInnerHTML={{ __html: prefsPage(t ?? '', []) }} />;
 }
