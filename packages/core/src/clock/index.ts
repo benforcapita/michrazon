@@ -1,1 +1,1 @@
-export * from './jerusalem';
+export * from './jerusalem.ts';

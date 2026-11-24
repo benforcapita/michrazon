@@ -7,7 +7,7 @@ import {
   type DigestItemView,
 } from '@michrazon/mail';
 import type { RunResult } from '@michrazon/ops';
-import type { WorkerDeps } from '../deps';
+import type { WorkerDeps } from '../deps.ts';
 
 const MAX_SEND_ATTEMPTS = 3;
 

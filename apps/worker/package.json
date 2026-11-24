@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node src/index.ts",
-    "start": "node src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node --conditions=dist dist/index.js --once",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"

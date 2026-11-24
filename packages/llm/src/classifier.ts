@@ -1,7 +1,7 @@
 import type { LlmProvider } from '@michrazon/core';
-import { buildUserPrompt, RETRY_HINT, SYSTEM_PROMPT } from './prompt';
-import type { ClassificationInput, ClassificationResult } from './schema';
-import { classificationResultSchema, CLASSIFICATION_JSON_SCHEMA } from './schema';
+import { buildUserPrompt, RETRY_HINT, SYSTEM_PROMPT } from './prompt.ts';
+import type { ClassificationInput, ClassificationResult } from './schema.ts';
+import { classificationResultSchema, CLASSIFICATION_JSON_SCHEMA } from './schema.ts';
 
 export type ClassificationStatus = 'ok' | 'needs_review';
 

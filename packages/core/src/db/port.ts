@@ -2,7 +2,7 @@
 // packages/db (MZ-W1-A). Web and worker code against this port; no raw SQL
 // outside packages/db.
 
-import type { SourceId } from '../types';
+import type { SourceId } from '../types.ts';
 import type {
   ConsentEvent,
   DeliveryStatus,
@@ -19,7 +19,7 @@ import type {
   SuppressionReason,
   TenderClassificationRow,
   TenderRow,
-} from './rows';
+} from './rows.ts';
 
 export type UpsertTenderOutcome = 'inserted' | 'unchanged' | 'updated';
 

@@ -1,6 +1,6 @@
 import type { RunResult } from '@michrazon/ops';
 import { checkSourceStaleness } from '@michrazon/ops';
-import type { WorkerDeps } from '../deps';
+import type { WorkerDeps } from '../deps.ts';
 import type { AlertSink } from '@michrazon/ops';
 
 const PENDING_TTL_MS = 7 * 24 * 3600 * 1000;

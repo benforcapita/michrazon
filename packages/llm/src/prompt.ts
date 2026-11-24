@@ -1,4 +1,4 @@
-import type { ClassificationInput } from './schema';
+import type { ClassificationInput } from './schema.ts';
 
 // Prompt v1 (LLD §8.2). Version is stamped on tender_classifications rows so
 // a prompt change produces a new input_hash and reclassifies cleanly.

@@ -1,3 +1,3 @@
-export * from './postgresDb';
-export * from './migrate';
-export * from './pool';
+export * from './postgresDb.ts';
+export * from './migrate.ts';
+export * from './pool.ts';

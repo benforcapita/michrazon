@@ -1,6 +1,6 @@
 import { isDocumentLike, jerusalemWallToUtc } from '@michrazon/core';
-import { isoDate, parseIsraeliDate } from './parse';
-import type { DatagovTender } from './schema';
+import { isoDate, parseIsraeliDate } from './parse.ts';
+import type { DatagovTender } from './schema.ts';
 
 // Field mapping (LLD §4.1, "מיפוי שדות: TBD"): the exact CKAN column names are
 // dataset-dependent, so each normalized field accepts an ordered list of
