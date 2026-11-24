@@ -107,6 +107,23 @@ describe('confirm + unsubscribe + prefs', () => {
     expect(fake.consents.at(-1)!.event).toBe('unsubscribed');
   });
 
+  it('housekeeping reverts a stale resubscribe request instead of deleting it (AC-20)', async () => {
+    const { d, fake } = deps();
+    const sub = await signup(d, fake);
+    const confirm = createToken({ sub: sub.id, act: 'confirm', secrets: SECRETS });
+    await handleConfirm({ method: 'POST', body: { t: confirm } }, d);
+    const unsub = createToken({ sub: sub.id, act: 'unsubscribe', secrets: SECRETS });
+    await handleUnsubscribe({ method: 'POST', body: { t: unsub } }, d);
+    await handleSubscribe({ method: 'POST', body: { email: 'u@u.com' } }, d);
+    expect(fake.subscribers[0]!.status).toBe('pending');
+
+    expect(await fake.db.purgePendingOlderThan(new Date(Date.now() + 60_000))).toBe(1);
+    expect(fake.subscribers).toHaveLength(1);
+    expect(fake.subscribers[0]!.status).toBe('unsubscribed');
+    expect(fake.suppressions.get('u@u.com')).toBe('unsubscribe');
+    expect(fake.consents.at(-1)!.event).toBe('resubscribe_requested');
+  });
+
   it('unsubscribe token never expires (AC: no TTL)', async () => {
     const { d, fake } = deps();
     const sub = await signup(d, fake);

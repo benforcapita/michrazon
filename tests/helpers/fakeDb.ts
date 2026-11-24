@@ -19,7 +19,7 @@ import type {
  */
 export function makeFakeDb(opts?: { now?: () => Date }) {
   const subscribers: SubscriberRow[] = [];
-  const consents: { subscriber_id: string; event: string }[] = [];
+  const consents: { subscriber_id: string; event: string; at: string }[] = [];
   const suppressions = new Map<string, string>();
   const sources = new Map<string, SourceRow>();
   const settings = new Map<string, unknown>();
@@ -102,7 +102,7 @@ export function makeFakeDb(opts?: { now?: () => Date }) {
       if (s) s.keywords = keywords;
     },
     async appendConsent(input) {
-      consents.push({ subscriber_id: input.subscriberId, event: input.event });
+      consents.push({ subscriber_id: input.subscriberId, event: input.event, at: nowIso() });
     },
     async listDeliverableSubscribers(now) {
       return subscribers.filter(
@@ -127,8 +127,20 @@ export function makeFakeDb(opts?: { now?: () => Date }) {
       let n = 0;
       for (let i = subscribers.length - 1; i >= 0; i -= 1) {
         const s = subscribers[i]!;
-        if (s.status === 'pending' && s.confirmed_at === null && new Date(s.created_at) < cutoff) {
-          subscribers.splice(i, 1);
+        if (s.status !== 'pending') continue;
+        if (s.confirmed_at === null) {
+          if (new Date(s.created_at) < cutoff) {
+            subscribers.splice(i, 1);
+            n += 1;
+          }
+          continue;
+        }
+        const requestedAt =
+          consents.filter((c) => c.subscriber_id === s.id && c.event === 'resubscribe_requested').at(-1)
+            ?.at ?? s.created_at;
+        if (new Date(requestedAt) < cutoff) {
+          s.status = 'unsubscribed';
+          s.ended_at = nowIso();
           n += 1;
         }
       }
