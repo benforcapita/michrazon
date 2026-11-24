@@ -1,5 +1,5 @@
 import { checkDailyBudget, classifyTender, PROMPT_VERSION, type ClassificationInput } from '@michrazon/llm';
-import { contentHash, jerusalemDate } from '@michrazon/core';
+import { jerusalemDate } from '@michrazon/core';
 import type { RunResult } from '@michrazon/ops';
 import type { WorkerDeps } from '../deps';
 
@@ -31,7 +31,7 @@ export async function runClassify(deps: WorkerDeps): Promise<RunResult | null> {
       const outcome = await classifyTender(deps.llm, input);
       await deps.db.insertClassification({
         tender_id: tender.id,
-        input_hash: contentHash({ input, prompt_version: PROMPT_VERSION }),
+        input_hash: tender.content_hash, // hash-invalidates on tender update (join in listDigestEligible)
         model_id: outcome.modelId ?? deps.llm.id,
         prompt_version: PROMPT_VERSION,
         is_relevant: outcome.result?.is_relevant ?? false,

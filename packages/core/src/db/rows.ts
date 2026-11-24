@@ -130,6 +130,7 @@ export interface PipelineRunRow {
   id: number;
   kind: RunKind;
   source_id: string | null;
+  task: string | null;
   status: RunStatus;
   started_at: string;
   finished_at: string | null;

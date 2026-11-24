@@ -30,12 +30,13 @@ export class RunRecorder {
     kind: RunKind,
     sourceId: string | null,
     fn: () => Promise<RunResult>,
+    task?: string | null,
   ): Promise<RunResult | null> {
     const { db, alerts, log } = this.deps;
     const today = jerusalemDate((this.deps.now?.() ?? new Date()));
 
-    if (await db.hasFinishedRunOnDate(kind, sourceId, today)) {
-      log.info('run already finished today, skipping', { kind, sourceId, date: today });
+    if (await db.hasFinishedRunOnDate(kind, sourceId, today, task ?? null)) {
+      log.info('run already finished today, skipping', { kind, sourceId, task, date: today });
       return null;
     }
     if (sourceId) {
@@ -46,7 +47,7 @@ export class RunRecorder {
       }
     }
 
-    const runId = await db.startRun(kind, sourceId);
+    const runId = await db.startRun(kind, sourceId, task ?? null);
     let result: RunResult;
     try {
       result = await fn();

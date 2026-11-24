@@ -18,7 +18,7 @@ const heDate = (ymd: string): string => ymd.split('-').reverse().join('.');
 
 /** Build today's digest from tenders first seen since the last sent digest. */
 export async function runDigestBuild(deps: WorkerDeps): Promise<RunResult | null> {
-  return deps.recorder.runOnce('digest', 'build', async (): Promise<RunResult> => {
+  return deps.recorder.runOnce('digest', null, async (): Promise<RunResult> => {
     const today = jerusalemDate(deps.now());
     if (await deps.db.getDigestByDate(today)) {
       return { status: 'ok', counts: { items: 0, already_built: 1 } };
@@ -45,7 +45,7 @@ export async function runDigestBuild(deps: WorkerDeps): Promise<RunResult | null
       queued += 1;
     }
     return { status: 'ok', counts: { items: eligible.length, queued } };
-  });
+  }, 'build');
 }
 
 async function sendDeliveries(
@@ -137,9 +137,9 @@ async function sendDeliveries(
 }
 
 export async function runDigestSend(deps: WorkerDeps): Promise<RunResult | null> {
-  return deps.recorder.runOnce('digest', 'send', () => sendDeliveries(deps, { queuedOnly: true }));
+  return deps.recorder.runOnce('digest', null, () => sendDeliveries(deps, { queuedOnly: true }), 'send');
 }
 
 export async function runDigestRetry(deps: WorkerDeps): Promise<RunResult | null> {
-  return deps.recorder.runOnce('digest', 'retry', () => sendDeliveries(deps, { failedRetry: true }));
+  return deps.recorder.runOnce('digest', null, () => sendDeliveries(deps, { failedRetry: true }), 'retry');
 }

@@ -285,11 +285,12 @@ export function makeFakeDb(opts?: { now?: () => Date }) {
     },
 
     // ---- pipeline runs & locks ----
-    async startRun(kind, sourceId = null) {
+    async startRun(kind, sourceId = null, task = null) {
       const row: PipelineRunRow = {
         id: ++runSeq,
         kind,
         source_id: sourceId,
+        task,
         status: 'running',
         started_at: nowIso(),
         finished_at: null,
@@ -306,11 +307,11 @@ export function makeFakeDb(opts?: { now?: () => Date }) {
         r.counts = result.counts ?? {};
         r.error = result.error ?? null;
         r.finished_at = nowIso();
-        finishedRunDates.add(`${r.kind}|${r.source_id ?? ''}|${jerusalemDate(now())}`);
+        finishedRunDates.add(`${r.kind}|${r.source_id ?? ''}|${r.task ?? ''}|${jerusalemDate(now())}`);
       }
     },
-    async hasFinishedRunOnDate(kind, sourceId, dateYmd) {
-      return finishedRunDates.has(`${kind}|${sourceId ?? ''}|${dateYmd}`);
+    async hasFinishedRunOnDate(kind, sourceId, dateYmd, task = null) {
+      return finishedRunDates.has(`${kind}|${sourceId ?? ''}|${task ?? ''}|${dateYmd}`);
     },
     async lastRunOfKind(kind, sourceId = null) {
       return [...runs].reverse().find((r) => r.kind === kind && r.source_id === sourceId) ?? null;

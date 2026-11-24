@@ -49,6 +49,7 @@ export async function startTestDb(): Promise<TestDb> {
   await pg.start();
   const connectionString = `postgres://postgres:postgres@localhost:${port}/postgres`;
   const pool = new Pool({ connectionString });
+  pool.on('error', () => undefined); // shutdown noise during pg.stop
   await applyMigrations(pool, MIGRATIONS_DIR);
   const db = new PostgresDb(pool);
   return {

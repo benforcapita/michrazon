@@ -23,10 +23,16 @@ export async function runHousekeeping(deps: WorkerDeps): Promise<RunResult | nul
 
 /** 08:45 daily: alert when a source produced nothing for 3 days. */
 export async function runStalenessCheck(deps: WorkerDeps, alerts: AlertSink): Promise<RunResult | null> {
-  return deps.recorder.runOnce('housekeeping', 'staleness', () =>
-    checkSourceStaleness(deps.db, alerts, deps.now()).then((reports) => ({
-      status: 'ok' as const,
-      counts: { stale_sources: reports.filter((r) => r.stale).length },
-    })),
+  return deps.recorder.runOnce(
+    'housekeeping',
+    null,
+    async () => {
+      const reports = await checkSourceStaleness(deps.db, alerts, deps.now());
+      return {
+        status: 'ok' as const,
+        counts: { stale_sources: reports.filter((r) => r.stale).length },
+      };
+    },
+    'staleness',
   );
 }

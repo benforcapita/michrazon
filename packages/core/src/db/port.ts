@@ -115,13 +115,13 @@ export interface Db {
   ): Promise<void>;
 
   // ---- pipeline runs ----
-  startRun(kind: RunKind, sourceId?: string | null): Promise<number>;
+  startRun(kind: RunKind, sourceId?: string | null, task?: string | null): Promise<number>;
   finishRun(
     id: number,
     result: { status: RunStatus; counts?: Record<string, number>; error?: string },
   ): Promise<void>;
   /** Whether a run of `kind` (and optional source) already finished on `dateYmd` (Asia/Jerusalem). */
-  hasFinishedRunOnDate(kind: RunKind, sourceId: string | null, dateYmd: string): Promise<boolean>;
+  hasFinishedRunOnDate(kind: RunKind, sourceId: string | null, dateYmd: string, task?: string | null): Promise<boolean>;
   lastRunOfKind(kind: RunKind, sourceId?: string | null): Promise<PipelineRunRow | null>;
 
   // ---- per-source advisory lock (LLD §7: no concurrent ingest per host) ----

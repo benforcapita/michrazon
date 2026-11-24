@@ -447,10 +447,10 @@ export class PostgresDb implements Db {
   }
 
   // ---- pipeline runs ----
-  async startRun(kind: RunKind, sourceId?: string | null): Promise<number> {
+  async startRun(kind: RunKind, sourceId?: string | null, task?: string | null): Promise<number> {
     const r = await this.q.query<{ id: string }>(
-      'insert into pipeline_runs(kind, source_id) values ($1::run_kind, $2) returning id',
-      [kind, sourceId ?? null],
+      'insert into pipeline_runs(kind, source_id, task) values ($1::run_kind, $2, $3) returning id',
+      [kind, sourceId ?? null, task ?? null],
     );
     return Number(r.rows[0]!.id);
   }
@@ -471,17 +471,19 @@ export class PostgresDb implements Db {
     kind: RunKind,
     sourceId: string | null,
     dateYmd: string,
+    task?: string | null,
   ): Promise<boolean> {
     const r = await this.q.query<{ exists: boolean }>(
       `select exists(
          select 1 from pipeline_runs
          where kind = $1::run_kind
            and source_id is not distinct from $2
+           and task is not distinct from $4
            and finished_at is not null
            and status <> 'failed'
            and (finished_at at time zone 'Asia/Jerusalem')::date = $3::date
        ) as exists`,
-      [kind, sourceId, dateYmd],
+      [kind, sourceId, dateYmd, task ?? null],
     );
     return r.rows[0]?.exists ?? false;
   }
