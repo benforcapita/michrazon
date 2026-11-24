@@ -59,6 +59,20 @@ Worker env (Railway → michrazon → worker → Variables; Ben fills values):
   deadline and listing link only; stored `summary_he` is never sent
 - `LLM_API_KEY` is **not required** for the jev path (leave unset)
 
+To create the empty placeholder keys on Railway (writes the non-secret
+values, leaves `TYPESAFE_*` empty for Ben):
+
+```sh
+RAILWAY_TOKEN=<token> node scripts/railway/create-worker-env-stubs.mjs
+# preview only:
+node scripts/railway/create-worker-env-stubs.mjs --dry-run
+```
+
+Variable changes may trigger a redeploy of the worker service — run it when
+a restart of the cron tick is acceptable. If a project-scoped token can't
+resolve names, pass `RAILWAY_PROJECT_ID` / `RAILWAY_ENVIRONMENT_ID` /
+`RAILWAY_SERVICE_ID` explicitly.
+
 Set `LLM_PROVIDER=chat_completions` + `LLM_API_KEY` + `LLM_MODEL` to use the
 OpenAI-compatible path instead (kept in-tree, not the pilot path).
 
