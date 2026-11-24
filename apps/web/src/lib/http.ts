@@ -8,6 +8,7 @@ export interface HandlerRequest {
   query?: Record<string, string>;
   /** Client key for rate limiting (e.g. forwarded IP), never stored. */
   clientKey?: string;
+  headers?: Record<string, string>;
 }
 
 export interface HandlerResult {
