@@ -85,6 +85,7 @@ export function buildWorkerDeps(env: Record<string, string | undefined>): {
     llm: new ChatCompletionsProvider({
       apiKey: cfg.llmApiKey ?? '',
       model: cfg.llmModel ?? 'gpt-4o-mini',
+      baseUrl: cfg.llmBaseUrl,
       fetchImpl: fetchJson,
       id: cfg.llmProvider ?? 'chat_completions',
     }),

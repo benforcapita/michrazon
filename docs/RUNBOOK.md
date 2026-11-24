@@ -27,7 +27,10 @@ step is a deliberate action by Ben.
    `pnpm --filter @michrazon/worker start`), cron `*/30 * * * *`. Env: `DB_URL_WORKER`,
    `TOKEN_HMAC_SECRET`, `TOKEN_HMAC_KID`, `RESEND_API_KEY`, `LLM_*`,
    `DATAGOV_*`, `MRGOV_LISTING_URL`, `SENDING_DOMAIN`, `OPS_ALERT_TO`,
-   `UA_PRODUCT_URL`, `UA_CONTACT`.
+   `UA_PRODUCT_URL`, `UA_CONTACT`. Worker LLM block: `LLM_PROVIDER`,
+   `LLM_MODEL`, `LLM_API_KEY`, `LLM_DAILY_BUDGET`, and optional `LLM_BASE_URL`
+   (https OpenAI-compatible API base, e.g. `https://openrouter.ai/api/v1`;
+   unset = `https://api.openai.com/v1`).
 4. Resend: verify sending domain; subscribe webhook to `email.bounced` +
    `email.complained` ONLY; point it at `/api/webhooks/resend`.
    Run the domain tracking check (`checkDomainTracking` /

@@ -16,6 +16,7 @@ export const ENV_NAMES = [
   'LLM_PROVIDER',
   'LLM_MODEL',
   'LLM_API_KEY',
+  'LLM_BASE_URL', // OpenAI-compatible API base (https); unset = OpenAI default
   'LLM_DAILY_BUDGET', // hard daily token/spend cap
   'PROMPT_VERSION',
   'SENDING_DOMAIN',
@@ -49,6 +50,7 @@ export interface AppConfig {
   llmProvider?: string;
   llmModel?: string;
   llmApiKey?: string;
+  llmBaseUrl?: string;
   llmDailyBudget?: number;
   promptVersion: string;
   sendingDomain?: string;
@@ -109,6 +111,8 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   optStr('DATAGOV_RESOURCE_URL', 'datagovResourceUrl');
   optStr('DATAGOV_DATASET_URL', 'datagovDatasetUrl');
   optStr('MRGOV_LISTING_URL', 'mrgovListingUrl');
+  const llmBaseUrl = opt(env, 'LLM_BASE_URL');
+  if (llmBaseUrl !== undefined) cfg.llmBaseUrl = parseHttpsBaseUrl('LLM_BASE_URL', llmBaseUrl);
   const budget = opt(env, 'LLM_DAILY_BUDGET');
   if (budget !== undefined) {
     const n = Number(budget);
@@ -118,6 +122,17 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
 
   assertBillingGate(cfg);
   return cfg;
+}
+
+function parseHttpsBaseUrl(name: EnvName, value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new ConfigError(`${name} must be an https URL`);
+  }
+  if (url.protocol !== 'https:') throw new ConfigError(`${name} must be an https URL`);
+  return value.replace(/\/+$/, '');
 }
 
 /**
