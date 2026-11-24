@@ -117,7 +117,7 @@ describe('source seeds and 2021 dataset (AC-06)', () => {
   it('no reference to the 2021 tenders report dataset', () => {
     for (const f of sourceFiles().filter((f) => !f.includes('scripts/ci/') && !f.includes('compliance.test.ts'))) {
       const text = readFileSync(f, 'utf8');
-      expect(text, f).not.toMatch(/דוח מכרזים/);
+      expect(text, f).not.toMatch(/\u05D3\u05D5\u05D7 \u05DE\u05DB\u05E8\u05D6\u05D9\u05DD/);
     }
   });
 });
