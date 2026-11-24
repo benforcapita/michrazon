@@ -1,4 +1,4 @@
-import { checkDailyBudget, classifyTender, PROMPT_VERSION, type ClassificationInput } from '@michrazon/llm';
+import { checkDailyBudget, PROMPT_VERSION, type ClassificationInput } from '@michrazon/llm';
 import { jerusalemDate } from '@michrazon/core';
 import type { RunResult } from '@michrazon/ops';
 import type { WorkerDeps } from '../deps';
@@ -8,7 +8,13 @@ const BATCH = 50;
 
 export async function runClassify(deps: WorkerDeps): Promise<RunResult | null> {
   return deps.recorder.runOnce('classify', null, async () => {
-    const counts: Record<string, number> = { classified: 0, needs_review: 0, budget_stopped: 0 };
+    const counts: Record<string, number> = {
+      classified: 0,
+      needs_review: 0,
+      budget_stopped: 0,
+      keyword_fallback: 0,
+    };
+    let fallbackReason: string | null = null;
     const tenders = await deps.db.listUnclassified(BATCH);
     const today = jerusalemDate(deps.now());
 
@@ -28,11 +34,15 @@ export async function runClassify(deps: WorkerDeps): Promise<RunResult | null> {
         submission_deadline: tender.submission_deadline ?? undefined,
         open_data_fields: tender.open_data_fields ?? undefined,
       };
-      const outcome = await classifyTender(deps.llm, input);
+      const outcome = await deps.classifier.classify(input);
+      if (outcome.fallbackReason) {
+        counts['keyword_fallback'] = (counts['keyword_fallback'] ?? 0) + 1;
+        fallbackReason ??= outcome.fallbackReason;
+      }
       await deps.db.insertClassification({
         tender_id: tender.id,
         input_hash: tender.content_hash, // hash-invalidates on tender update (join in listDigestEligible)
-        model_id: outcome.modelId ?? deps.llm.id,
+        model_id: outcome.modelId ?? deps.classifier.id,
         prompt_version: PROMPT_VERSION,
         is_relevant: outcome.result?.is_relevant ?? false,
         confidence: outcome.result?.confidence ?? 0,
@@ -46,6 +56,15 @@ export async function runClassify(deps: WorkerDeps): Promise<RunResult | null> {
       });
       counts[outcome.status === 'ok' ? 'classified' : 'needs_review'] =
         (counts[outcome.status === 'ok' ? 'classified' : 'needs_review'] ?? 0) + 1;
+    }
+    // Provider outage degraded to keyword scoring: the run continues but is
+    // recorded 'partial' with the reason on pipeline_runs (PRO-812 §4).
+    if (fallbackReason !== null) {
+      return {
+        status: 'partial',
+        counts,
+        error: `${deps.classifier.id} classifier unavailable; keyword fallback used: ${fallbackReason}`,
+      };
     }
     return { status: 'ok', counts };
   });

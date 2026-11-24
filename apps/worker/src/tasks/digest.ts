@@ -67,7 +67,8 @@ async function sendDeliveries(
     publisher: e.tender.publisher ?? undefined,
     published: e.tender.published_at ?? undefined,
     deadline: e.tender.submission_deadline?.slice(0, 10),
-    summary_he: e.classification.summary_he,
+    // Pilot: digests never carry LLM summaries (PRO-812 §6).
+    summary_he: deps.summariesEnabled ? e.classification.summary_he : null,
     official_url: e.tender.official_url,
     source_label: sourceLabel(e.tender.source_id),
   }));

@@ -13,6 +13,9 @@ export interface ClassificationOutcome {
   inputTokens: number;
   outputTokens: number;
   modelId?: string;
+  /** Set when the result came from the keyword fallback instead of the
+   *  primary classifier (PRO-812) — recorded on the pipeline run. */
+  fallbackReason?: string | null;
 }
 
 export interface ClassifyOptions {

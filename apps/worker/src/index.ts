@@ -3,9 +3,19 @@
 // `node dist/index.js --once` runs a single tick — used by Railway cron and
 // for the local dry-run smoke path.
 
-import { GuardedHttpImpl, loadConfig, type SourceHttpLimits, type SourceId, type TokenSecrets } from '@michrazon/core';
+import { GuardedHttpImpl, loadConfig, type AppConfig, type SourceHttpLimits, type SourceId, type TokenSecrets } from '@michrazon/core';
 import { PostgresDb } from '@michrazon/db';
 import { DatagovBeershevaAdapter, MrGovListingAdapter } from '@michrazon/adapters';
+import {
+  ChatCompletionsClassifier,
+  createJevSystemOneClient,
+  DEFAULT_RELEVANCE_THRESHOLD,
+  JevClassifier,
+  KeywordClassifier,
+  KeywordFallbackClassifier,
+  type JevFetch,
+  type TenderClassifier,
+} from '@michrazon/llm';
 import { EmailAlertSink, RunRecorder } from '@michrazon/ops';
 import { ResendTransport, SuppressionAwareSender } from '@michrazon/mail';
 import { Pool } from 'pg';
@@ -17,6 +27,38 @@ const DEFAULT_SOURCE_LIMITS: Record<SourceId, SourceHttpLimits> = {
   datagov_beersheva: { minIntervalMs: 5_000, maxPerRun: 20 },
   mrgov_listing: { minIntervalMs: 10_000, jitterMs: 3_000, maxPerRun: 60 },
 };
+
+/**
+ * LLM_PROVIDER=jev selects the TypeSafe System One classifier wrapped in the
+ * keyword-only fallback — the tick never fails because Jev is down or its key
+ * is unset (PRO-812 §4). Any other value keeps the chat-completions path.
+ */
+function buildClassifier(cfg: AppConfig, fetchJson: JevFetch): TenderClassifier {
+  if (cfg.llmProvider === 'jev') {
+    return new KeywordFallbackClassifier(
+      new JevClassifier({
+        systemOne: createJevSystemOneClient({
+          apiKey: cfg.typesafeApiKey,
+          model: cfg.typesafeModel,
+          fetchImpl: fetchJson,
+        }),
+        minConfidence: cfg.jevMinConfidence,
+        model: cfg.typesafeModel,
+      }),
+      new KeywordClassifier(),
+      consoleLogger,
+    );
+  }
+  return new ChatCompletionsClassifier(
+    new ChatCompletionsProvider({
+      apiKey: cfg.llmApiKey ?? '',
+      model: cfg.llmModel ?? 'gpt-4o-mini',
+      fetchImpl: fetchJson,
+      id: cfg.llmProvider ?? 'chat_completions',
+    }),
+    { summariesEnabled: cfg.summariesEnabled },
+  );
+}
 
 export function buildWorkerDeps(env: Record<string, string | undefined>): {
   deps: WorkerDeps;
@@ -81,12 +123,7 @@ export function buildWorkerDeps(env: Record<string, string | undefined>): {
           }
         : {}),
     },
-    llm: new ChatCompletionsProvider({
-      apiKey: cfg.llmApiKey ?? '',
-      model: cfg.llmModel ?? 'gpt-4o-mini',
-      fetchImpl: fetchJson,
-      id: cfg.llmProvider ?? 'chat_completions',
-    }),
+    classifier: buildClassifier(cfg, fetchJson),
     sender,
     recorder: new RunRecorder({ db, alerts, log: consoleLogger }),
     secrets,
@@ -96,7 +133,13 @@ export function buildWorkerDeps(env: Record<string, string | undefined>): {
     attributionBySource: async (sourceId) =>
       ((await db.getSource(sourceId))?.attribution_text ?? ''),
     llmDailyBudgetTokens: cfg.llmDailyBudget ?? 100_000,
-    relevanceThreshold: 0.8,
+    // Jev path gates digests on JEV_MIN_CONFIDENCE (default 0.55); the
+    // chat-completions path keeps the calibrated 0.8 (PRO-812 §1).
+    relevanceThreshold:
+      cfg.llmProvider === 'jev'
+        ? cfg.jevMinConfidence
+        : DEFAULT_RELEVANCE_THRESHOLD,
+    summariesEnabled: cfg.summariesEnabled,
     log: consoleLogger,
     now: () => new Date(),
   };
