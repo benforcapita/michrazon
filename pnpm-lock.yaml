@@ -11,9 +11,24 @@ importers:
       '@eslint/js':
         specifier: ^9.39.1
         version: 9.39.5
+      '@michrazon/adapters':
+        specifier: workspace:*
+        version: link:packages/adapters
+      '@michrazon/core':
+        specifier: workspace:*
+        version: link:packages/core
       '@michrazon/db':
         specifier: workspace:*
         version: link:packages/db
+      '@michrazon/llm':
+        specifier: workspace:*
+        version: link:packages/llm
+      '@michrazon/mail':
+        specifier: workspace:*
+        version: link:packages/mail
+      '@michrazon/ops':
+        specifier: workspace:*
+        version: link:packages/ops
       '@types/node':
         specifier: ^24.10.0
         version: 24.19.2

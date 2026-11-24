@@ -17,12 +17,17 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@michrazon/adapters": "workspace:*",
+    "@michrazon/core": "workspace:*",
+    "@michrazon/db": "workspace:*",
+    "@michrazon/llm": "workspace:*",
+    "@michrazon/mail": "workspace:*",
+    "@michrazon/ops": "workspace:*",
     "@types/node": "^24.10.0",
     "eslint": "^9.39.1",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2",
-    "vitest": "^3.2.4",
-    "@michrazon/db": "workspace:*"
+    "vitest": "^3.2.4"
   }
 }
