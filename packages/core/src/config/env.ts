@@ -24,6 +24,10 @@ export const ENV_NAMES = [
   'UA_PRODUCT_URL',
   'UA_CONTACT',
   'INTERNAL_HEALTH_TOKEN',
+  'DATAGOV_RESOURCE_ID', // CKAN datastore resource id (TBD per LLD §4.1)
+  'DATAGOV_RESOURCE_URL', // direct single-file resource URL (preferred)
+  'DATAGOV_DATASET_URL', // dataset page — provenance + official_url fallback
+  'MRGOV_LISTING_URL', // listing URL template; '{page}' placeholder or ?page=N
 ] as const;
 
 export type EnvName = (typeof ENV_NAMES)[number];
@@ -53,6 +57,10 @@ export interface AppConfig {
   uaProductUrl?: string;
   uaContact?: string;
   internalHealthToken?: string;
+  datagovResourceId?: string;
+  datagovResourceUrl?: string;
+  datagovDatasetUrl?: string;
+  mrgovListingUrl?: string;
 }
 
 export class ConfigError extends Error {}
@@ -97,6 +105,10 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   optStr('UA_PRODUCT_URL', 'uaProductUrl');
   optStr('UA_CONTACT', 'uaContact');
   optStr('INTERNAL_HEALTH_TOKEN', 'internalHealthToken');
+  optStr('DATAGOV_RESOURCE_ID', 'datagovResourceId');
+  optStr('DATAGOV_RESOURCE_URL', 'datagovResourceUrl');
+  optStr('DATAGOV_DATASET_URL', 'datagovDatasetUrl');
+  optStr('MRGOV_LISTING_URL', 'mrgovListingUrl');
   const budget = opt(env, 'LLM_DAILY_BUDGET');
   if (budget !== undefined) {
     const n = Number(budget);

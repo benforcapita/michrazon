@@ -70,6 +70,8 @@ export interface Db {
     textVersion: string;
   }): Promise<void>;
   listDeliverableSubscribers(now: Date): Promise<SubscriberRow[]>; // active, pilot not expired
+  /** Pilot ended -> cancelled. Returns rows cancelled (housekeeping, AC-23). */
+  endExpiredPilots(now: Date): Promise<number>;
   purgePendingOlderThan(cutoff: Date): Promise<number>; // housekeeping
 
   // ---- suppression ----
@@ -93,6 +95,8 @@ export interface Db {
   ): Promise<TenderClassificationRow>;
   /** Relevant, ok-status, confidence >= threshold, not uncertain — for digest build. */
   listDigestEligible(tenderIds: string[], threshold: number): Promise<DigestEligibleItem[]>;
+  /** Token spend for the LLM daily budget (LLD §8.5) on a Jerusalem date. */
+  sumClassificationTokensOnDate(dateYmd: string): Promise<{ input: number; output: number }>;
 
   // ---- digests ----
   getDigestByDate(digestDate: string): Promise<DigestRow | null>;

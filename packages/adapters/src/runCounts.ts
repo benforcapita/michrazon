@@ -1,4 +1,1 @@
-export interface AdapterRunCounts {
-  emitted: number;
-  skipped: number;
-}
+export type { AdapterRunCounts } from '@michrazon/core';

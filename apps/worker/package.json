@@ -13,13 +13,16 @@
   "dependencies": {
     "@michrazon/adapters": "workspace:*",
     "@michrazon/core": "workspace:*",
+    "@michrazon/db": "workspace:*",
     "@michrazon/llm": "workspace:*",
     "@michrazon/mail": "workspace:*",
     "@michrazon/ops": "workspace:*",
+    "pg": "^8.23.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "@types/pg": "^8.23.1",
     "typescript": "^5.9.3"
   }
 }

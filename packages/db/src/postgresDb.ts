@@ -140,6 +140,15 @@ export class PostgresDb implements Db {
     );
   }
 
+  async endExpiredPilots(now: Date): Promise<number> {
+    const r = await this.q.query(
+      `update subscribers set status = 'cancelled', ended_at = now()
+       where status = 'active' and plan = 'pilot' and pilot_ends_at is not null and pilot_ends_at <= $1`,
+      [now.toISOString()],
+    );
+    return r.rowCount ?? 0;
+  }
+
   async listDeliverableSubscribers(now: Date): Promise<SubscriberRow[]> {
     const r = await this.q.query<SubscriberRow>(
       `select * from subscribers s
@@ -301,6 +310,16 @@ export class PostgresDb implements Db {
       ],
     );
     return r.rows[0]!;
+  }
+
+  async sumClassificationTokensOnDate(dateYmd: string) {
+    const r = await this.q.query(
+      `select coalesce(sum(input_tokens),0)::int as input, coalesce(sum(output_tokens),0)::int as output
+       from tender_classifications where created_at::date = $1::date`,
+      [dateYmd],
+    );
+    const row = r.rows[0] as { input: number; output: number } | undefined;
+    return { input: row?.input ?? 0, output: row?.output ?? 0 };
   }
 
   async listDigestEligible(tenderIds: string[], threshold: number): Promise<DigestEligibleItem[]> {

@@ -99,6 +99,9 @@ importers:
       '@michrazon/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@michrazon/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@michrazon/llm':
         specifier: workspace:*
         version: link:../../packages/llm
@@ -108,6 +111,9 @@ importers:
       '@michrazon/ops':
         specifier: workspace:*
         version: link:../../packages/ops
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -115,6 +121,9 @@ importers:
       '@types/node':
         specifier: ^24.10.0
         version: 24.19.2
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

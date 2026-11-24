@@ -44,9 +44,16 @@ export interface AdapterContext {
   log: Logger;
 }
 
+export interface AdapterRunCounts {
+  emitted: number;
+  skipped: number;
+}
+
 export interface SourceAdapter {
   readonly id: SourceId;
   readonly tier: SourceTier;
+  /** Populated during fetchSince; reset each run. */
+  readonly counts: AdapterRunCounts;
   /** Async generator; adapter calls ctx.http for every network access. */
   fetchSince(ctx: AdapterContext, since: Date): AsyncIterable<NormalizedTender>;
 }
