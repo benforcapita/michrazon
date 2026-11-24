@@ -8,7 +8,7 @@ export type ClassificationStatus = 'ok' | 'needs_review';
 export interface ClassificationOutcome {
   status: ClassificationStatus;
   result?: ClassificationResult;
-  reason?: string;
+  reason?: string | null;
   attempts: number;
   inputTokens: number;
   outputTokens: number;
