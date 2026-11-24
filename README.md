@@ -1,2 +1,22 @@
-# michrazon
-מכרזון (Michrazon) — Hebrew public-tender daily email alerts for software/digital/AI vendors in Israel. Public during active dev; revert to private at project end.
+# michrazon — מכרזון
+
+Hebrew daily email alerts for new Israeli public tenders relevant to **software, digital and AI vendors** (small dev shops, agencies, freelancers), each with a short AI summary and a link to the official source.
+
+## Status
+- **Design approved for ticketing only. Development has NOT started.** Every implementation ticket waits for Ben's explicit go.
+- Design: HLD + LLD tracked on Linear `PRO-771`.
+- Repo is **public only for the duration of active development** (free GitHub Actions); it goes back to private when the project ends.
+
+## Hard constraints (enforced in code, not only in process)
+- Sources: `data.gov.il` (GREEN, with attribution). `mr.gov.il` (YELLOW): listing facts + official link only. Never fetch, store or summarize tender booklets/PDFs.
+- **Excluded:** Tel Aviv-Yafo (`tel-aviv.gov.il`) and Jerusalem. Never crawled.
+- **Zero tracking:** no open tracking, no click tracking, no sessions, no analytics.
+- Double opt-in, one-click unsubscribe (RFC 8058), immediate suppression.
+- Billing stays behind a feature flag (OFF) until a lawyer has reviewed the `mr.gov.il` terms.
+
+## Contribution rules
+- PRs are opened by `devin-ai-integration` only; replacement PRs rebase on `main`.
+- Small PRs, one owned path set per ticket, green CI + proof.
+
+## License
+MIT
