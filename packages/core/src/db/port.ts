@@ -63,6 +63,8 @@ export interface Db {
   }): Promise<SubscriberRow>;
   updateSubscriberStatus(id: string, status: SubscriberStatus): Promise<void>;
   confirmSubscriber(id: string): Promise<void>; // -> active + confirmed_at
+  /** AC-20: unsubscribed -> pending on the same row (new double opt-in). Null if not unsubscribed. */
+  reopenForResubscribe(id: string): Promise<SubscriberRow | null>;
   updateSubscriberKeywords(id: string, keywords: string[]): Promise<void>;
   appendConsent(input: {
     subscriberId: string;
@@ -72,7 +74,8 @@ export interface Db {
   listDeliverableSubscribers(now: Date): Promise<SubscriberRow[]>; // active, pilot not expired
   /** Pilot ended -> cancelled. Returns rows cancelled (housekeeping, AC-23). */
   endExpiredPilots(now: Date): Promise<number>;
-  purgePendingOlderThan(cutoff: Date): Promise<number>; // housekeeping
+  /** Housekeeping: delete never-confirmed pendings; revert stale resubscribe requests to unsubscribed. */
+  purgePendingOlderThan(cutoff: Date): Promise<number>;
 
   // ---- suppression ----
   getSuppression(emailNorm: string): Promise<{ email_norm: string; reason: SuppressionReason } | null>;

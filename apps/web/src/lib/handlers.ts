@@ -48,16 +48,31 @@ export async function handleSubscribe(req: HandlerRequest, deps: WebDeps): Promi
   if (suppression?.reason === 'complaint') return json(200, SUBSCRIBE_OK);
 
   const existing = await deps.db.findSubscriberByEmailNorm(norm);
-  if (existing && (existing.status === 'active' || existing.status === 'pending')) {
+  let sub;
+  if (!existing) {
+    sub = await deps.db.createPendingSubscriber({ email: parsed.data });
+    await deps.db.appendConsent({
+      subscriberId: sub.id,
+      event: 'signup_submitted',
+      textVersion: CONSENT_TEXT_VERSION,
+    });
+  } else if (existing.status === 'unsubscribed') {
+    // AC-20: same row back to pending; the 'unsubscribe' suppression stays until confirm.
+    sub = await deps.db.withTransaction(async (tx) => {
+      const reopened = await tx.reopenForResubscribe(existing.id);
+      if (!reopened) return null;
+      await tx.appendConsent({
+        subscriberId: reopened.id,
+        event: 'resubscribe_requested',
+        textVersion: CONSENT_TEXT_VERSION,
+      });
+      return reopened;
+    });
+    if (!sub) return json(200, SUBSCRIBE_OK);
+  } else {
+    // active/pending: nothing to do; cancelled/bounced/complained: never auto-reopened.
     return json(200, SUBSCRIBE_OK);
   }
-
-  const sub = await deps.db.createPendingSubscriber({ email: parsed.data });
-  await deps.db.appendConsent({
-    subscriberId: sub.id,
-    event: 'signup_submitted',
-    textVersion: CONSENT_TEXT_VERSION,
-  });
   const token = createToken({ sub: sub.id, act: 'confirm', secrets: deps.secrets });
   await deps.sendConfirmEmail(parsed.data, `${deps.baseUrl}/confirm?t=${encodeURIComponent(token)}`);
   return json(200, SUBSCRIBE_OK);
@@ -85,10 +100,18 @@ export async function handleConfirm(req: HandlerRequest, deps: WebDeps): Promise
   }
   const sub = await deps.db.getSubscriberById(payload.sub);
   if (!sub) return tokenFail();
-  await deps.db.withTransaction(async (tx) => {
-    await tx.confirmSubscriber(sub.id);
-    await tx.appendConsent({ subscriberId: sub.id, event: 'confirmed', textVersion: CONSENT_TEXT_VERSION });
-  });
+  // Only a pending subscriber can be confirmed: an old confirm token never
+  // reactivates an unsubscribed address (AC-20).
+  if (sub.status === 'pending') {
+    await deps.db.withTransaction(async (tx) => {
+      await tx.confirmSubscriber(sub.id);
+      await tx.appendConsent({ subscriberId: sub.id, event: 'confirmed', textVersion: CONSENT_TEXT_VERSION });
+      const suppression = await tx.getSuppression(sub.email_norm);
+      if (suppression?.reason === 'unsubscribe') await tx.deleteSuppression(sub.email_norm);
+    });
+  } else if (sub.status !== 'active') {
+    return tokenFail();
+  }
   return html(200, okPage('ההרשמה אושרה. הדיגסט היומי יישלח אליך בימים א׳–ה׳.'));
 }
 

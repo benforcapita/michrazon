@@ -125,6 +125,16 @@ export class PostgresDb implements Db {
     );
   }
 
+  async reopenForResubscribe(id: string): Promise<SubscriberRow | null> {
+    const r = await this.q.query<SubscriberRow>(
+      `update subscribers set status = 'pending', ended_at = null
+       where id = $1 and status = 'unsubscribed'
+       returning *`,
+      [id],
+    );
+    return r.rows[0] ?? null;
+  }
+
   async updateSubscriberKeywords(id: string, keywords: string[]): Promise<void> {
     await this.q.query('update subscribers set keywords = $2::text[] where id = $1', [id, keywords]);
   }
@@ -162,11 +172,23 @@ export class PostgresDb implements Db {
   }
 
   async purgePendingOlderThan(cutoff: Date): Promise<number> {
-    const r = await this.q.query(
-      `delete from subscribers where status = 'pending' and created_at < $1`,
+    // Previously confirmed rows keep their consent history (AC-20): a stale
+    // resubscribe request goes back to 'unsubscribed' instead of being deleted.
+    const deleted = await this.q.query(
+      `delete from subscribers
+       where status = 'pending' and confirmed_at is null and created_at < $1`,
       [cutoff],
     );
-    return r.rowCount ?? 0;
+    const reverted = await this.q.query(
+      `update subscribers s set status = 'unsubscribed', ended_at = now()
+       where s.status = 'pending' and s.confirmed_at is not null
+         and coalesce(
+           (select max(c.at) from consents c
+             where c.subscriber_id = s.id and c.event = 'resubscribe_requested'),
+           s.created_at) < $1`,
+      [cutoff],
+    );
+    return (deleted.rowCount ?? 0) + (reverted.rowCount ?? 0);
   }
 
   // ---- suppression ----
