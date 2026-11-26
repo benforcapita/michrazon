@@ -1,6 +1,6 @@
 // Per-host rate limiting (LLD §7): minimum interval between requests, optional
 // jitter, and a per-run request cap. Injectable clock/sleep for tests.
-import { RateLimitExceededError } from '../guard/errors';
+import { RateLimitExceededError } from '../guard/errors.ts';
 
 export interface RateLimitOptions {
   minIntervalMs: number;

@@ -1,1 +1,1 @@
-export * from './guardedHttp';
+export * from './guardedHttp.ts';

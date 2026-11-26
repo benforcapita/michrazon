@@ -1,13 +1,13 @@
 // LLD §5 — closed allowlist + denylist. Denylist is checked FIRST, so a red
 // domain can never be served even if it lands in the allowlist (T-GUARD-1).
-import type { SourceId } from '../types';
+import type { SourceId } from '../types.ts';
 import {
   DeniedSourceError,
   DocumentFetchForbiddenError,
   ForbiddenContentTypeError,
   InsecureSchemeError,
   NotAllowlistedError,
-} from './errors';
+} from './errors.ts';
 
 export const ALLOWLIST = ['data.gov.il', 'mr.gov.il'] as const;
 export const DENYLIST = ['tel-aviv.gov.il', 'jerusalem.muni.il'] as const;

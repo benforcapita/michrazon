@@ -1,5 +1,5 @@
 import { isDocumentLike, jerusalemWallToUtc } from '@michrazon/core';
-import { isoDate, parseIsraeliDate } from '../datagov-beersheva/parse';
+import { isoDate, parseIsraeliDate } from '../datagov-beersheva/parse.ts';
 
 // Listing-page parsing (LLD §4.2). The real mr.gov.il DOM is TBD, so every
 // pattern is configurable; the defaults match the storefront markup shape we

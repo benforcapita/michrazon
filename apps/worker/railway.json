@@ -1,7 +1,10 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "buildCommand": "pnpm build:worker"
+  },
   "deploy": {
-    "startCommand": "node src/index.ts",
+    "startCommand": "node --conditions=dist dist/index.js --once",
     "cronSchedule": "*/30 * * * *",
     "restartPolicyType": "NEVER"
   }

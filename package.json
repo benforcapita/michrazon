@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r --if-present run typecheck",
+    "build:worker": "pnpm --filter \"@michrazon/worker...\" run build",
     "test": "vitest run",
     "ci:secret-scan": "bash scripts/ci/secret-scan.sh",
     "ci:guard": "bash scripts/ci/check-red-domains.sh && bash scripts/ci/check-2021-dataset.sh"

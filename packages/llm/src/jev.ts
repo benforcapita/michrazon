@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { postCheck, type ClassificationOutcome } from './classifier';
-import { buildUserPrompt } from './prompt';
-import type { ClassificationInput, ClassificationResult } from './schema';
-import { CATEGORY_ENUM, classificationResultSchema } from './schema';
-import type { TenderClassifier } from './tenderClassifier';
+import { postCheck, type ClassificationOutcome } from './classifier.ts';
+import { buildUserPrompt } from './prompt.ts';
+import type { ClassificationInput, ClassificationResult } from './schema.ts';
+import { CATEGORY_ENUM, classificationResultSchema } from './schema.ts';
+import type { TenderClassifier } from './tenderClassifier.ts';
 
 // TypeSafe Jev classifier (PRO-812): System One `Choice` questions over the
 // tender facts — not a chat-completions call. Uses the documented HTTP API

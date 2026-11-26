@@ -1,6 +1,6 @@
 import type { LlmProvider, Logger } from '@michrazon/core';
-import { classifyTender, type ClassificationOutcome, type ClassifyOptions } from './classifier';
-import type { ClassificationInput } from './schema';
+import { classifyTender, type ClassificationOutcome, type ClassifyOptions } from './classifier.ts';
+import type { ClassificationInput } from './schema.ts';
 
 /**
  * Classifier-level abstraction (PRO-812): the worker's classify task calls

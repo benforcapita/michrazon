@@ -1,7 +1,7 @@
 import { tenderContentHash } from '@michrazon/core';
 import { MAX_SKIP_RATE, skipRate } from '@michrazon/ops';
 import type { SourceAdapter } from '@michrazon/core';
-import type { WorkerDeps } from '../deps';
+import type { WorkerDeps } from '../deps.ts';
 import type { RunResult } from '@michrazon/ops';
 
 export async function runIngest(deps: WorkerDeps, adapter: SourceAdapter): Promise<RunResult | null> {

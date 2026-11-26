@@ -21,7 +21,10 @@ step is a deliberate action by Ben.
    `TOKEN_HMAC_SECRET`, `TOKEN_HMAC_KID`, `RESEND_API_KEY` (send-limited key if
    available), `RESEND_WEBHOOK_SECRET`, `SENDING_DOMAIN`, `REPLY_TO`,
    `INTERNAL_HEALTH_TOKEN`.
-3. Railway service → `apps/worker`, cron `*/30 * * * *`. Env: `DB_URL_WORKER`,
+3. Railway service → `apps/worker` (config in `apps/worker/railway.json`):
+   build `pnpm build:worker` (tsc → `dist/` for the worker and its workspace
+   packages), start `node --conditions=dist dist/index.js --once` (same as
+   `pnpm --filter @michrazon/worker start`), cron `*/30 * * * *`. Env: `DB_URL_WORKER`,
    `TOKEN_HMAC_SECRET`, `TOKEN_HMAC_KID`, `RESEND_API_KEY`, `LLM_*`,
    `DATAGOV_*`, `MRGOV_LISTING_URL`, `SENDING_DOMAIN`, `OPS_ALERT_TO`,
    `UA_PRODUCT_URL`, `UA_CONTACT`.
@@ -31,7 +34,15 @@ step is a deliberate action by Ben.
    `assertTrackingOff`) — deploy fails closed if tracking is on.
 5. Enable a source deliberately: `update sources set enabled = true where id =
    'datagov_beersheva'` — staging first per LLD §17.
-6. Smoke: worker `--once` dry-run prints the digest without sending.
+6. Smoke (staging DB, sends nothing): `pnpm build:worker`, then from
+   `apps/worker` run
+   `node --conditions=dist dist/index.js --once --at=<a Sun–Thu 07:10 Asia/Jerusalem instant>`
+   (e.g. `--at=2026-01-18T05:10:00Z`). Only the digest build window is open
+   at that time, so it builds the digest and sends no mail. Exit 0 = every
+   task that ran finished ok/partial; exit 1 = bad flag, missing config, DB
+   unreachable or a task recorded `failed`. `--at` only moves the tick clock.
+   CI runs the same command against an ephemeral Postgres
+   (`tests/worker/start.test.ts`).
 
 ## Legal gate (AC-21/22)
 
@@ -94,7 +105,7 @@ OpenAI-compatible path instead (kept in-tree, not the pilot path).
 - >30% skipped records → run fails (markup change) + alert.
 - `LLM_DAILY_BUDGET` reached → classify stops, alert, next run resumes.
 - Resend failure → `attempts++`, retried in the 08:30 window (max 3).
-- DB down → worker exits `failed`; no send ever skips the suppression check.
+- DB down → worker run fails and the process exits 1; no send ever skips the suppression check.
 
 ## Key rotation
 

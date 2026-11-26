@@ -1,6 +1,6 @@
-import type { ClassificationOutcome } from './classifier';
-import type { ClassificationInput, ClassificationResult } from './schema';
-import type { TenderClassifier } from './tenderClassifier';
+import type { ClassificationOutcome } from './classifier.ts';
+import type { ClassificationInput, ClassificationResult } from './schema.ts';
+import type { TenderClassifier } from './tenderClassifier.ts';
 
 // Keyword-only fallback (PRO-812 §4): deterministic relevance signals for
 // when Jev is unreachable. Conservative — ambiguous or signal-free tenders

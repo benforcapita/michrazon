@@ -1,6 +1,6 @@
 import type { Db, Logger, RunKind } from '@michrazon/core';
 import { jerusalemDate } from '@michrazon/core';
-import type { AlertSink } from './alerts';
+import type { AlertSink } from './alerts.ts';
 
 // Pipeline run recorder (LLD §13): every scheduled task is wrapped in a
 // pipeline_runs row; failures and partials raise an ops alert; ingest runs

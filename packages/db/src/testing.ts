@@ -7,8 +7,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import EmbeddedPostgres from 'embedded-postgres';
 import { Pool } from 'pg';
-import { applyMigrations } from './migrate';
-import { PostgresDb } from './postgresDb';
+import { applyMigrations } from './migrate.ts';
+import { PostgresDb } from './postgresDb.ts';
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../db/migrations');
 

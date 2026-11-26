@@ -3,11 +3,11 @@ import type {
   NormalizedTender,
   SourceAdapter,
 } from '@michrazon/core';
-import type { AdapterRunCounts } from '../runCounts';
-import type { DatagovFieldMap } from './fieldMap';
-import { normalizeRecord } from './fieldMap';
-import { parseCsv, parseDatastoreResponse } from './parse';
-import { datagovTenderSchema } from './schema';
+import type { AdapterRunCounts } from '../runCounts.ts';
+import type { DatagovFieldMap } from './fieldMap.ts';
+import { normalizeRecord } from './fieldMap.ts';
+import { parseCsv, parseDatastoreResponse } from './parse.ts';
+import { datagovTenderSchema } from './schema.ts';
 
 const CKAN_DATASTORE = 'https://data.gov.il/api/3/action/datastore_search';
 const PAGE_SIZE = 1000;

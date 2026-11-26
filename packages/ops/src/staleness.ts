@@ -1,5 +1,5 @@
 import type { Db } from '@michrazon/core';
-import type { AlertSink } from './alerts';
+import type { AlertSink } from './alerts.ts';
 
 // "No new tenders in 3 days" ops check (LLD §11, 08:45 daily).
 
